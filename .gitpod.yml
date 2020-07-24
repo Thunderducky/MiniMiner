@@ -1,3 +1,10 @@
 tasks:
-  - init: npm install
-    command: npm install
+  - init: |
+      touch /tmp/.npm-lock
+      yarn install
+      rm /tmp/.npm-lock
+    command: yarn run build:dev
+  - init: sleep 1 && while [ -f /tmp/.npm-lock ]; do sleep 1; done
+    command: |
+      nodemon dist/js/index.js
+  
