@@ -6,5 +6,5 @@ tasks:
     command: yarn run build:dev
   - init: sleep 1 && while [ -f /tmp/.npm-lock ]; do sleep 1; done
     command: |
-      nodemon dist/js/index.js
+      npx nodemon dist/js/index.js
   

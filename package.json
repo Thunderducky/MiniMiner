@@ -1,12 +1,11 @@
 {
-  "name": "MiniMiner",
+  "name": "mini-miner",
   "version": "1.0.0",
-  "main": "index.js",
   "repository": "https://github.com/Thunderducky/MiniMiner.git",
   "author": "Thunderducky <scottzillaster@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start:dev": "nodemon dist/index.js",
+    "start:dev": "nodemon ./dist/index.js",
     "build:dev": "tsc --watch --preserveWatchOutput"
   },
   "dependencies": {
