@@ -9,10 +9,12 @@
     "build:dev": "tsc --watch --preserveWatchOutput"
   },
   "dependencies": {
+    "chalk": "^4.1.0",
     "typescript": "^3.9.7"
   },
   "devDependencies": {
     "concurrently": "^5.2.0",
-    "nodemon": "^2.0.4"
+    "nodemon": "^2.0.4",
+    "ts-essentials": "^7.0.0"
   }
 }
