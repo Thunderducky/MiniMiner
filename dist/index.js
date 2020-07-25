@@ -109,9 +109,28 @@ class Camera {
             && bottom <= y && y <= top;
     }
 }
-const camera = new Camera(-10, -10, 20, 20);
+const camera = new Camera(-20, -20, 40, 40);
 const visibleAsteroids = asteroids.filter(asteroid => camera.contains(asteroid));
-const relativePositions = asteroids.map(asteroid => {
-    return Object.assign(Object.assign({}, asteroid), { x: asteroid.x - camera.left, y: asteroid.y - camera.top });
+const gridPositionedAsteroids = asteroids.map(asteroid => {
+    return Object.assign(Object.assign({}, asteroid), { x: Math.floor(asteroid.x - camera.left), y: Math.floor(asteroid.y - camera.top) });
 });
+// TODO: we gotta optimize this
 // let's draw them on the screen
+console.log(gridPositionedAsteroids);
+console.log(camera);
+for (let y = camera.top; y <= camera.bottom; y++) {
+    let colorStr = "";
+    for (let x = camera.left; x <= camera.right; x++) {
+        const matchingAsteroids = gridPositionedAsteroids.filter(a => a.x === x && a.y === y);
+        const squareValue = matchingAsteroids.reduce((value, a) => value + a.value, 0);
+        colorStr += matchingAsteroids.length;
+        // pick a color based off of that and draw make it a string
+        // if(squareValue < 1){
+        //     colorStr += chalk.bgRgb(0,0,0)("   ");
+        // } else {
+        //     colorStr += chalk.bgRgb(255,255,255)("   ");
+        // }
+        //colorStr += squareValue.toString();
+    }
+    console.log(colorStr);
+}
