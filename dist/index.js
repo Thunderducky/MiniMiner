@@ -1,5 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const chalk_1 = __importDefault(require("chalk"));
 class Asteroid {
     constructor(designation, x, y, value) {
         this.designation = designation;
@@ -14,7 +18,7 @@ class GameWorldData {
     constructor() {
         this.asteroids = [];
         this.asteroids.push(new Asteroid("A", 2, 4, 10));
-        this.asteroids.push(new Asteroid("B", 20, 8, 20));
+        this.asteroids.push(new Asteroid("B", -1, 4, 20));
         this.asteroids.push(new Asteroid("C", 1, 1, 4));
     }
 }
@@ -60,14 +64,14 @@ Value: $${asteroid.value}m
 `));
 };
 displayAsteroids(asteroids);
-GameWorldStore.instance.dispatch(SIMULATE);
-GameWorldStore.instance.dispatch(SIMULATE);
-GameWorldStore.instance.dispatch(SIMULATE);
+// GameWorldStore.instance.dispatch(SIMULATE);
+// GameWorldStore.instance.dispatch(SIMULATE);
+// GameWorldStore.instance.dispatch(SIMULATE);
 displayAsteroids(asteroids);
 // Let's try and draw this
 // Let's draw a grid so we can see what is happening over time, we'll divide it up into grid areas and then we'll be able to see
 class Camera {
-    constructor(top, left, width, height) {
+    constructor(left, top, width, height) {
         this._width = width;
         this._height = height;
         this._halfWidth = width / 2;
@@ -75,13 +79,13 @@ class Camera {
         this._top = top;
         this._left = left;
         this._right = left + width;
-        this._bottom = top + height;
+        this._bottom = top - height;
     }
     get center() {
-        return { x: this._left + this._halfWidth, y: this._top + this._halfHeight };
+        return { x: this._left + this._halfWidth, y: this._top - this._halfHeight };
     }
     set center(p) {
-        this._top = p.y - this._halfHeight;
+        this._top = p.y + this._halfHeight;
         this._left = p.x - this._halfWidth;
     }
     get width() {
@@ -109,28 +113,29 @@ class Camera {
             && bottom <= y && y <= top;
     }
 }
-const camera = new Camera(-20, -20, 40, 40);
+const camera = new Camera(-10, 10, 20, 20);
 const visibleAsteroids = asteroids.filter(asteroid => camera.contains(asteroid));
 const gridPositionedAsteroids = asteroids.map(asteroid => {
-    return Object.assign(Object.assign({}, asteroid), { x: Math.floor(asteroid.x - camera.left), y: Math.floor(asteroid.y - camera.top) });
+    return Object.assign(Object.assign({}, asteroid), { x: Math.floor(asteroid.x - camera.center.x), y: Math.floor(asteroid.y - camera.center.y) });
 });
 // TODO: we gotta optimize this
 // let's draw them on the screen
+// console.log(gridPositionedAsteroids);
+// console.log(camera);
 console.log(gridPositionedAsteroids);
-console.log(camera);
-for (let y = camera.top; y <= camera.bottom; y++) {
+// This is just a small test program
+for (let y = camera.top; y >= camera.bottom; y--) {
     let colorStr = "";
     for (let x = camera.left; x <= camera.right; x++) {
         const matchingAsteroids = gridPositionedAsteroids.filter(a => a.x === x && a.y === y);
         const squareValue = matchingAsteroids.reduce((value, a) => value + a.value, 0);
-        colorStr += matchingAsteroids.length;
-        // pick a color based off of that and draw make it a string
-        // if(squareValue < 1){
-        //     colorStr += chalk.bgRgb(0,0,0)("   ");
-        // } else {
-        //     colorStr += chalk.bgRgb(255,255,255)("   ");
-        // }
-        //colorStr += squareValue.toString();
+        colorStr += chalk_1.default.bgHex(matchingAsteroids.length ? "#77AA77" : "#000000")((x === 0 && y === 0)
+            ? "+-"
+            : x == 0
+                ? "| "
+                : y === 0
+                    ? "--"
+                    : "  ");
     }
     console.log(colorStr);
 }
