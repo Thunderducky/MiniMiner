@@ -3,23 +3,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const Asteroid_1 = __importDefault(require("./GameWorld/GameEntities/Asteroid"));
+const Ship_1 = __importDefault(require("./GameWorld/GameEntities/Ship"));
 const chalk_1 = __importDefault(require("chalk"));
-class Asteroid {
-    constructor(designation, x, y, value) {
-        this.designation = designation;
-        this.x = x;
-        this.y = y;
-        this.dx = (Math.random() - 0.5) * 2;
-        this.dy = (Math.random() - 0.5) * 2;
-        this.value = value;
-    }
-}
 class GameWorldData {
     constructor() {
         this.asteroids = [];
-        this.asteroids.push(new Asteroid("A", 2, 4, 10));
-        this.asteroids.push(new Asteroid("B", -1, 4, 20));
-        this.asteroids.push(new Asteroid("C", 1, 1, 4));
+        this.asteroids.push(new Asteroid_1.default("A", 2, 4, 10));
+        this.asteroids.push(new Asteroid_1.default("B", -1, 4, 20));
+        this.asteroids.push(new Asteroid_1.default("C", 1, 1, 4));
+        this.ship = new Ship_1.default("playerShip", 2, 2, 2, 2);
     }
 }
 // We might keep these as debug flags and this will allow us to dynamically insert strings, but then treat it as enums
@@ -40,7 +33,8 @@ class GameWorldStore {
     get worldData() {
         return this._worldData;
     }
-    dispatch(message) {
+    dispatch(action) {
+        const message = action.type;
         // handle things in a reducer here, and allow us to build pipes of reducers, these can affect certain parts of the gameworld, so we can more precisely control
         // mutations
         // they can also access any other part of the world that they need in a readonly fashion if necessary
@@ -51,10 +45,13 @@ class GameWorldStore {
                 asteroid.x += asteroid.dx;
                 asteroid.y += asteroid.dy;
             });
+            const { ship } = this._worldData;
+            ship.x += ship.dx;
+            ship.y += ship.dy;
         }
     }
 }
-const { asteroids } = GameWorldStore.instance.worldData;
+const { asteroids, ship } = GameWorldStore.instance.worldData;
 const displayAsteroids = (asteroids) => {
     asteroids.forEach(asteroid => console.log(`
 Designation: ${asteroid.designation} 
@@ -64,8 +61,7 @@ Value: $${asteroid.value}m
 `));
 };
 displayAsteroids(asteroids);
-// GameWorldStore.instance.dispatch(SIMULATE);
-// GameWorldStore.instance.dispatch(SIMULATE);
+GameWorldStore.instance.dispatch({ type: SIMULATE });
 // GameWorldStore.instance.dispatch(SIMULATE);
 displayAsteroids(asteroids);
 // Let's try and draw this
@@ -118,6 +114,7 @@ const visibleAsteroids = asteroids.filter(asteroid => camera.contains(asteroid))
 const gridPositionedAsteroids = asteroids.map(asteroid => {
     return Object.assign(Object.assign({}, asteroid), { x: Math.floor(asteroid.x - camera.center.x), y: Math.floor(asteroid.y - camera.center.y) });
 });
+const adjustedShip = Object.assign(Object.assign({}, ship), { x: ship.x - camera.center.x, y: ship.y - camera.center.y });
 // TODO: we gotta optimize this
 // let's draw them on the screen
 // console.log(gridPositionedAsteroids);
@@ -129,13 +126,23 @@ for (let y = camera.top; y >= camera.bottom; y--) {
     for (let x = camera.left; x <= camera.right; x++) {
         const matchingAsteroids = gridPositionedAsteroids.filter(a => a.x === x && a.y === y);
         const squareValue = matchingAsteroids.reduce((value, a) => value + a.value, 0);
-        colorStr += chalk_1.default.bgHex(matchingAsteroids.length ? "#77AA77" : "#000000")((x === 0 && y === 0)
-            ? "+-"
-            : x == 0
-                ? "| "
-                : y === 0
-                    ? "--"
-                    : "  ");
+        let text = "";
+        if (x === 0 && y === 0) {
+            text = "+-";
+        }
+        else if (x === 0) {
+            text = "| ";
+        }
+        else if (y === 0) {
+            text = "--";
+        }
+        else {
+            text = "  ";
+        }
+        if (adjustedShip.x === x && adjustedShip.y === y) {
+            text = "<>";
+        }
+        colorStr += chalk_1.default.bgHex(matchingAsteroids.length ? "#77AA77" : "#000000")(text);
     }
     console.log(colorStr);
 }
