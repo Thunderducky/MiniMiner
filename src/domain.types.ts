@@ -1,6 +1,7 @@
 import { Brand, Flavor } from './flavoring-and-branding';
 
 // Measurements
+export type UnitAmount = Flavor<number, 'UnitAmount'>;
 // Time
 export type Seconds = Flavor<number, 'Seconds'>;
 export type Milliseconds = Flavor<number, 'Milliseconds'>;
@@ -48,7 +49,12 @@ export type Force2D = Flavor<{
 export type RotationalVelocity2D = Flavor<{deltaRotation: Rotation, time: Time}, 'Rotational Velocity'>;
 
 // Not super pleased with this name, but it works
-export type MovementState = Position2d & Velocity2d & Rotation & RotationalVelocity2D 
+export type MovementState = {
+    position: Position2d,
+    velocity: Velocity2d,
+    rotation: Rotation,
+    rotationalVelocity: RotationalVelocity2D
+}
 
 // Currency
 export type SpaceBucks = Flavor<number, 'SpaceBucks'>;
@@ -64,9 +70,8 @@ export type MaterialType = Flavor<{
     unitVolume: MaterialUnitVolume,
     unitMass: MaterialUnitMass,
 }, 'MaterialType'>
-export type MaterialAmount = Flavor<number, 'MaterialAmount'>;
+export type MaterialAmount = Flavor<UnitAmount, 'MaterialAmount'>;
 
-// TODO: See if We want to work with some kind of validated type like VerifiedMaterialAmount
 export type MaterialResource = Flavor<{
     type: MaterialTypeId,
     amount: MaterialAmount
@@ -106,7 +111,7 @@ export type Market = Flavor<{
 
 // More specific objects
 export type AsteroidDesignation = Designation<'AsteroidDesignation'>;
-export type Asteroid = Flavor<{
+export type Asteroid = Flavor<MovementState & {
     entityId: EntityId,
     designation: AsteroidDesignation,
     resources: MaterialResource[]
@@ -114,19 +119,19 @@ export type Asteroid = Flavor<{
 
 
 export type ShipDesignation = Designation<'ShipDesignation'>;
-export type Ship = Flavor<{
+export type Ship = Flavor<MovementState & {
     entityId: EntityId,
     designation: ShipDesignation,
-    owner: AgentId,
+    ownerId: AgentId,
     // Todo, model cargo and max capabilities
     // Eventually we'll componetize ship parts
-} & MovementState, 'Ship'>;
+}, 'Ship'>;
 
 export type StationDesignation = Designation<'StationDesignation'>;
 export type Station = Flavor<{
     entityId: EntityId,
     designation: StationDesignation,
-    owner: AgentId,
+    ownerId: AgentId,
     market?:Market // Markets aren't mandatory
     // Eventually we'll componetize ship parts
 } & MovementState, 'Station'>;
