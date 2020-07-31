@@ -1,133 +1,140 @@
-import chalk from 'chalk';
-import {Asteroid, EntityId, ShipDesignation, MovementState, Meters, Seconds, Radians, Ship, AgentId, AsteroidDesignation, MaterialResource, Time} from './domain.types';
+type Vector2d = {x:number, y:number};
+type MovementState = {
+    position:Vector2d;
+    velocity:Vector2d;
+    rotation: number;
+    rotationVelocity: number;
+}
 
-console.log(chalk.blue("\n\nBEGIN\n\n"));
+type Ship = MovementState & {
+    entityId: number;
+    fuel: number;
+    fuelPerMinute: number;
+    maxFuel: number;
+    oreStore: number;
+    maxOreStore: number;
+    miningLaserOrePerSecond: number;
+    miningLaserRange: number;
+}
 
-const makeDefaultMovmentState = (
-    x = 0 as Meters, 
-    y = 0 as Meters):MovementState => {
+type Station = MovementState & {
+    entityId: number;
+    orePrice: number;
+    fuelPrice: number;
+}
+
+type Asteroid = MovementState & {
+    entityId: number;
+    oreCount: number;
+}
+
+// This represent the player
+type Agent = {
+    entityId: number;
+    money: number;
+    ship?:Ship;
+}
+
+const Factory = {
+    _id:0,
+    _generateId: function():number{
+        return this._id++;
+    },
+    _makeDefaultMovement: function(x:number,y:number):MovementState {
+        return {
+            position: {x,y},
+            velocity: {x: 0, y: 0},
+            rotation: 0,
+            rotationVelocity: 0
+        };
+    },
+    makeAsteroid: function(x:number, y:number, oreCount: number): Asteroid {
+        return {
+            entityId: this._generateId(),
+            ...this._makeDefaultMovement(x,y),
+            oreCount
+        };
+    },
+    makeShip: function(x:number,y:number): Ship {
+        return {
+            entityId: this._generateId(),
+            ...this._makeDefaultMovement(x,y),
+            fuel: 20,
+            fuelPerMinute: 4,
+            maxFuel: 20,
+            oreStore: 0,
+            maxOreStore: 20,
+            miningLaserOrePerSecond: 0.5,
+            miningLaserRange: 10
+        };
+    },
+    makeStation: function(x: number, y: number, orePrice:number, fuelPrice: number): Station {
+        return {
+            entityId: this._generateId(),
+            ...this._makeDefaultMovement(x,y),
+            orePrice,
+            fuelPrice
+        }
+    },
+    makeAgent: function(ship?:Ship):Agent{
+        return {
+            entityId: this._generateId(),
+            money: 0,
+            ship
+        };
+    },
+}
+
+// We are hardcoding a time limit for each round and then you can play again if you want, the goal is to get a low enough time
+const playerShip = Factory.makeShip(0, 0);
+const player = Factory.makeAgent(playerShip);
+
+const station = Factory.makeStation(5, 5, 20, 5);
+
+const asteroid1 = Factory.makeAsteroid(-3, -2, 10);
+asteroid1.velocity.x = 0.2;
+asteroid1.velocity.y = 0.2;
+
+const asteroid2 = Factory.makeAsteroid(-3, 2, 10);
+asteroid2.velocity.x = 0.1;
+asteroid2.velocity.y = -0.15;
+
+const movables = [playerShip, asteroid1, asteroid2];
+
+function processVelocity(mover:MovementState, seconds:number):MovementState {
     return {
-        position: {x, y},
-        velocity:{ 
-            deltaPosition: {
-                x: 0 as Meters, 
-                y: 0 as Meters
-            }, 
-            time: 1 as Seconds
-        },
-        rotation: 0 as Radians,
-        rotationalVelocity: {
-            deltaRotation: 0 as Radians,
-            time: 1 as Seconds
+        ...mover,
+        position: {
+            x: mover.position.x + mover.velocity.x * seconds,
+            y: mover.position.y + mover.velocity.y * seconds,
         }
     }
 }
-// Eventually we'll use factories for this
-const makeTestShip = (entityId:EntityId, designation: ShipDesignation, ownerId: AgentId):Ship => {
-    return {
-        ...makeDefaultMovmentState(),
-        entityId,
-        designation,
-        ownerId
-    }
+const moved = movables.map(mover => processVelocity(mover, 1));
+
+// Really should add some validation in here to make sure that things are in range
+function mineAsteroid(ship:Ship, asteroid:Asteroid, seconds: number): [Ship, Asteroid] {
+    const maxYield = ship.miningLaserOrePerSecond * seconds;
+    const miningTotal = Math.min(ship.maxOreStore - ship.oreStore, maxYield, asteroid.oreCount);
+    return [
+        { 
+            ...ship,
+            oreStore: ship.oreStore + miningTotal
+        },
+        { 
+            ...asteroid,
+            oreCount: asteroid.oreCount - miningTotal
+        }
+    ]
 }
-const makeTestAsteroid = (entityId:EntityId, designation: AsteroidDesignation,):Asteroid => {
-    return {
-        ...makeDefaultMovmentState(),
-        entityId,
-        designation,
-        resources: []
-    };
-}
+const [s2playerShip, s2Asteroid1] = mineAsteroid(playerShip, asteroid1, 4);
+const [s3playerShip, s3Asteroid1] = mineAsteroid(s2playerShip, s2Asteroid1, 20);
 
-const ship = makeTestShip(1 as EntityId, "Test Ship", 1 as AgentId);
-const asteroid = makeTestAsteroid(2 as EntityId, "Test Asteroid")
-console.log(ship);
-console.log(asteroid)
-console.log(chalk.blue("\n\nEND\n\n"));
+console.log("BEFORE");
+console.log(playerShip, asteroid1);
+console.log("AFTER");
+console.log(s2playerShip, s2Asteroid1);
+console.log("AFTER AFTER");
+console.log(s3playerShip, s3Asteroid1);
 
-// import { GameWorldStore } from './GameWorld/GameWorldStore'
-// import { Camera } from './Camera'
 
-// MiningProcess, Material Cost, Time => Material Result
-type MiningProcess = {
-    requirements: MaterialResource[],
-    duration: Time,
-    output: MaterialResource[]
-}
-const process: MiningProcess = {
-    requirements: [],
-    duration: 1 as Seconds,
-    output: []
-}
-console.log(process);
-// const SIMULATE = "physics.simulate.step"
-// Use case, mine material from an asteroid, and then store it in the cargo hold
-
-// const { asteroids, ship } = GameWorldStore.instance.worldData;
-// type AsteroidArray = typeof asteroids;
-
-// const displayAsteroids = (asteroids: AsteroidArray) => {
-//     asteroids.forEach(
-//         asteroid => console.log(
-//             `
-// Designation: ${asteroid.designation} 
-// Position: (${asteroid.x}, ${asteroid.y})
-// Velocity: (${asteroid.dx}, ${asteroid.dy})
-// Value: $${asteroid.value}m
-// `));
-// }
-
-// displayAsteroids(asteroids);
-
-// GameWorldStore.instance.dispatch({ type: SIMULATE });
-
-// // GameWorldStore.instance.dispatch(SIMULATE);
-// displayAsteroids(asteroids);
-
-// // Let's try and draw this
-// // Let's draw a grid so we can see what is happening over time, we'll divide it up into grid areas and then we'll be able to see
-
-// const camera = new Camera(-10, 10, 20, 20);
-
-// const visibleAsteroids = asteroids.filter(asteroid => camera.contains(asteroid));
-
-// const gridPositionedAsteroids = visibleAsteroids.map(asteroid => {
-//     return {
-//         ...asteroid,
-//         x: Math.floor(asteroid.x - camera.center.x),
-//         y: Math.floor(asteroid.y - camera.center.y)
-//     }
-// })
-
-// // Let's add PIXI to our frontend
-
-// const adjustedShip = { ...ship, x: ship.x - camera.center.x, y: ship.y - camera.center.y };
-
-// for (let y = camera.top; y >= camera.bottom; y--) {
-//     let colorStr = "";
-//     for (let x = camera.left; x <= camera.right; x++) {
-//         const matchingAsteroids = gridPositionedAsteroids.filter(a => a.x === x && a.y === y)
-//         let text = "";
-//         if (x === 0 && y === 0) {
-//             text = "+-"
-//         } else if (x === 0) {
-//             text = "| "
-//         } else if (y === 0) {
-//             text = "--"
-//         } else {
-//             text = "  "
-//         }
-//         if (adjustedShip.x === x && adjustedShip.y === y) {
-//             text = "<>"
-//         }
-
-//         colorStr += chalk.bgHex(matchingAsteroids.length ? "#77AA77" : "#000000")(text);
-//     }
-//     console.log(colorStr);
-// }
-
-// Domain functions
-// Mine Asteroid
-// Travel
-// Sell Material
