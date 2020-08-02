@@ -3,8 +3,9 @@ tasks:
       touch /tmp/.npm-lock
       yarn install
       rm /tmp/.npm-lock
-    command: yarn run build:dev
+    command: yarn run webpack-dev-server
   - init: sleep 1 && while [ -f /tmp/.npm-lock ]; do sleep 1; done
     command: |
-      yarn run start:dev
+      yarn run build:scratch
+      yarn run start:scratch
   
