@@ -9,6 +9,11 @@ window.onload = function(){
     basicText.x = 10;
     basicText.y = 10;
 
+    // Two seperate ones, rather than others
+    const backgroundContainer = new PIXI.Container();
+    const foregroundContainer = new PIXI.Container();
+    app.stage.addChild(backgroundContainer);
+    app.stage.addChild(foregroundContainer);
     // Let's use the loader and get all the assets we need
     app.loader.baseUrl = "assets";
     app.loader
@@ -26,7 +31,7 @@ window.onload = function(){
         background.anchor.y = 0.5;
         background.position.x = app.view.width/2;
         background.position.y = app.view.height/2;
-        app.stage.addChild(background);
+        backgroundContainer.addChild(background);
         (window as any).background = background;
         const asteroids = [];
         function makeAsteroid(x:number,y:number){
@@ -36,7 +41,7 @@ window.onload = function(){
             asteroid.position.x = x;
             asteroid.position.y = y;
             asteroids.push(asteroid);
-            app.stage.addChild(asteroid);
+            foregroundContainer.addChild(asteroid);
         }
         makeAsteroid(100, 100);
         makeAsteroid(200, 300);
@@ -49,7 +54,7 @@ window.onload = function(){
         ship.anchor.y = 0.5;
         ship.position.x = 200;
         ship.position.y = 200;
-        app.stage.addChild(ship);
+        foregroundContainer.addChild(ship);
         (window as any).ship = ship;
 
         const station = new PIXI.Sprite(resources["station"].texture);
@@ -59,17 +64,20 @@ window.onload = function(){
         station.anchor.y = 0.5;
         station.position.x = 1000;
         station.position.y = 800;
-        app.stage.addChild(station);
+        foregroundContainer.addChild(station);
         (window as any).station = station;
 
         // let's have the station slowly rotate
-
+        foregroundContainer.x = foregroundContainer.width/2;
+        foregroundContainer.pivot.x = foregroundContainer.width/2;
+        foregroundContainer.y = foregroundContainer.height/2;
+        foregroundContainer.pivot.y = foregroundContainer.height/2;
         animate();
         function animate() {
             requestAnimationFrame(animate);
 
             station.rotation += 0.0005;
-
+            //foregroundContainer.rotation += 0.005;
             // render the container
             app.renderer.render(app.stage);
         }
