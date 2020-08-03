@@ -116,7 +116,7 @@ window.onload = function () {
             foregroundContainer.position.set(app.screen.width/2, app.screen.height/2);
             //backgroundContainer.pivot = ship.position;
             foregroundContainer.pivot = ship.position;
-            backgroundContainer.position.set(-velocity.x, -velocity.y);
+            backgroundContainer.position.set(-ship.position.x/100, -ship.position.y/100);
             app.renderer.render(app.stage);
         }
         // console.log(loader);
