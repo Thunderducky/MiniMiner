@@ -113,9 +113,10 @@ window.onload = function () {
             station.rotation += 0.0005;
             //foregroundContainer.rotation += 0.005;
             // render the container
-            app.stage.position.set(app.screen.width/2, app.screen.height/2);
+            foregroundContainer.position.set(app.screen.width/2, app.screen.height/2);
             //backgroundContainer.pivot = ship.position;
-            app.stage.pivot = ship.position;
+            foregroundContainer.pivot = ship.position;
+            backgroundContainer.position.set(-velocity.x, -velocity.y);
             app.renderer.render(app.stage);
         }
         // console.log(loader);
